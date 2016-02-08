@@ -1,25 +1,35 @@
 <html>
-  <head>
-    <style>
+	<head>
+		<style>
 
+body{
+	margin: 0;
+}
+#chart{
+	width: 100%;
+	height: 100%;
+}
 .node {
-  opacity: 0.5;
+	opacity: 0.5;
 }
 
 .node:hover {
-  opacity: 1;
+	opacity: 1;
 }
 
 .link {
-  stroke: #999;
-  stroke-opacity: 0.3;
+	stroke: #999;
+	stroke-opacity: 0.3;
 }
 
-    </style>
-    <script src="http://d3js.org/d3.v3.min.js"></script>
-  </head>
-  <body>
-    <div id="viz"></div>
-    <script src="main.js"></script>
-  </body>
+		</style>
+		<script src="//code.jquery.com/jquery-1.12.0.min.js"></script>
+		<script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+	</head>
+	<body>
+		<div id="chart"></div>  
+		<script src="main.js"></script>
+	</body>
 </html>
+
+
