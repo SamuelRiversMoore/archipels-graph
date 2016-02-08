@@ -115,7 +115,7 @@
 
 
 
-	$.getJSON("miserables.json", function(json) {
+	$.getJSON("atlas.json", function(json) {
 		var data = json;
 		console.log(data);
 		draw(data);
