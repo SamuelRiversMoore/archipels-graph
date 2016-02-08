@@ -13,7 +13,7 @@
 		.append("svg:svg")
 			.attr("width", w)
 			.attr("height", h)
-			.call(d3.behavior.zoom().on("zoom", redraw));
+			.call(d3.behavior.zoom().scaleExtent([0.1, 5]).on("zoom", redraw));
 
 	var vis = svg
 			.append('g');
@@ -30,7 +30,7 @@
 	}
 	window.onresize = updateWindow;
 
-
+	
 	var draw = function(json) {
 		var force = d3.layout.force()
 				.charge(-120)
@@ -39,15 +39,37 @@
 				.links(json.links)
 				.size([w, h]);
 
-		force.on('end', function() {
-		    node.attr('r', 5)
-		        .attr('cx', function(d) { return d.x; })
-		        .attr('cy', function(d) { return d.y; });
+/*		var voronoi = d3.geom.voronoi()
+			.x(function(d) {return x(d.x); })
+			.y(function(d) {return y(d.y); })
+			.clipExtent([[0,0],[w,h]]);
 
-		    link.attr('x1', function(d) { return d.source.x; })
-		        .attr('y1', function(d) { return d.source.y; })
-		        .attr('x2', function(d) { return d.target.x; })
-		        .attr('y2', function(d) { return d.target.y; });
+		//Create the Voronoi grid
+		svg.selectAll(".polygon")
+			.data(voronoi(force))
+			.enter().append("path")
+			.attr('class','polygon')
+			.attr("d",function(d){return "M" + d.join("L") + "Z";})
+			.datum(function(d, i) { return d.point; })
+			.attr("class", function(d,i) { return "voronoi " + d.id; })
+			.style("stroke", "#000")
+			.style("fill", "#2074A0")
+			.style("opacity", ".3")
+			.style("pointer-events", "all")
+			.on("mouseover", function(d){document.getElementById('legend').innerHTML = d.id})
+			.on("mouseout", function(d){document.getElementById('legend').innerHTML = ''});
+
+*/
+
+		force.on('end', function() {
+			node.attr('r', 5)
+				.attr('cx', function(d) { return d.x; })
+				.attr('cy', function(d) { return d.y; });
+
+			link.attr('x1', function(d) { return d.source.x; })
+				.attr('y1', function(d) { return d.source.y; })
+				.attr('x2', function(d) { return d.target.x; })
+				.attr('y2', function(d) { return d.target.y; });
 		});
 		force.start();
 
