@@ -4,8 +4,15 @@ var width = 1400,
 var color = d3.scale.category20();
 
 var force = d3.layout.force()
-    .charge(-120)
-    .linkDistance(function(link, index) { return link.weight })
+    .charge(-30)
+    .linkDistance(function(link, index) { 
+			if(link.type == 'table-table') {
+				return ( Math.min( 1, 50 - link.proximity ) * 300 );
+			} else {
+				return 1;
+			}
+		})
+    //.linkStrength(function(link, index) { return link.strength })
     .size([width, height]);
 
 var svg = d3.select("body").append("svg")
@@ -24,7 +31,13 @@ d3.json("atlas-total.json", function(error, graph) {
       .data(graph.links)
     	.enter().append("line")
       .attr("class", "link")
-      .style("stroke-width", function(d) { return Math.sqrt(d.weight); });
+      .style("stroke-width", function(d) { 
+				if(d.type == 'table-table') {
+					return ( d.proximity * .5 );
+				} else {
+				 	return 1;
+			 	}
+			} );
 
   var node = svg.selectAll(".node")
       .data(graph.nodes)

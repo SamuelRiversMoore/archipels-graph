@@ -62,16 +62,16 @@ if ( $query->have_posts() ) {
 			$couple = array($source, $target);
 			sort($couple);
 			$couple = implode($couple,'-');
-			$link = ['source' => array_search($source, $ids), 'target' => array_search($target, $ids), 'weight' => .5, 'type' => 'table-element' ];
+			$link = ['source' => array_search($source, $ids), 'target' => array_search($target, $ids), 'strength' => .2, 'proximity' => 100, 'type' => 'table-element' ];
 			$links[$couple] = $link ;
 			foreach($tables_ids as $target) {
 				if($target!=$source) {
 					$couple = array($source, $target);
 					sort($couple);
 					$couple = implode($couple,'-');
-					$link = ['source' => array_search($source, $ids), 'target' => array_search($target, $ids), 'weight' => 1, 'type' => 'table-table' ];
+					$link = ['source' => array_search($source, $ids), 'target' => array_search($target, $ids), 'strength' => 1, 'proximity' => 2, 'type' => 'table-table' ];
 					if( array_key_exists($couple, $links) ) {
-						$links[$couple]['weight']++;
+						$links[$couple]['proximity']++;
 					} else {
 						$links[$couple] = $link ;
 					}
