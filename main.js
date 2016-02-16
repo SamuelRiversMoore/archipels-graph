@@ -1,124 +1,107 @@
-
-
 (function (){
-	'use strict';
+  'use strict';
 
+  function name(d) { return d.name; }
+  function group(d) { return d.group; }
 
+  var color = d3.scale.category10();
+  function colorByGroup(d) { return color(group(d)); }
 
-	var w = $('#chart').width(),
-		h = $('#chart').height(),
-		fill = d3.scale.category20();
+  var width = 1500,
+      height = 800;
 
-	var svg = d3.select("#chart")
-		.append("svg:svg")
-			.attr("width", w)
-			.attr("height", h)
-			.call(d3.behavior.zoom().scaleExtent([0.1, 5]).on("zoom", redraw));
+  var svg = d3.select('#viz')
+      .append('svg')
+      .attr('width', width)
+      .attr('height', height);
 
-	var vis = svg
-			.append('g');
+  var node, link;
 
-	function redraw() {
-			vis.attr("transform",
-							 "translate(" + d3.event.translate + ")"
-							 + " scale(" + d3.event.scale + ")");
-	}
-	function updateWindow(){
-			w = $('#chart').width();
-			h = $('#chart').height();
-			svg.attr("width", w).attr("height", w);
-	}
-	window.onresize = updateWindow;
+  var voronoi = d3.geom.voronoi()
+      .x(function(d) { return d.x; })
+      .y(function(d) { return d.y; })
+      .clipExtent([[-10, -10], [width+10, height+10]]);
 
-	
-	var draw = function(json) {
-		var force = d3.layout.force()
-				.charge(-120)
-				.linkDistance(30)
-				.nodes(json.nodes)
-				.links(json.links)
-				.size([w, h]);
+  function recenterVoronoi(nodes) {
+    var shapes = [];
+    voronoi(nodes).forEach(function(d) {
+      if (!d.length) {
+        return;
+      }
 
-/*		var voronoi = d3.geom.voronoi()
-			.x(function(d) {return x(d.x); })
-			.y(function(d) {return y(d.y); })
-			.clipExtent([[0,0],[w,h]]);
+      var n = [];
+      d.forEach(function(c) {
+        n.push([ c[0] - d.point.x, c[1] - d.point.y ]);
+      });
+      n.point = d.point;
+      shapes.push(n);
+    });
+    return shapes;
+  }
 
-		//Create the Voronoi grid
-		svg.selectAll(".polygon")
-			.data(voronoi(force))
-			.enter().append("path")
-			.attr('class','polygon')
-			.attr("d",function(d){return "M" + d.join("L") + "Z";})
-			.datum(function(d, i) { return d.point; })
-			.attr("class", function(d,i) { return "voronoi " + d.id; })
-			.style("stroke", "#000")
-			.style("fill", "#2074A0")
-			.style("opacity", ".3")
-			.style("pointer-events", "all")
-			.on("mouseover", function(d){document.getElementById('legend').innerHTML = d.id})
-			.on("mouseout", function(d){document.getElementById('legend').innerHTML = ''});
+  var force = d3.layout.force()
+      .charge(-30)
+      .friction(0.3)
+      .linkDistance( function(link, index) { return Math.pow( ( ( 1 / link.value ) + 1 ) * 4 , 3 ) ; } )
+      .size([width, height]);
 
-*/
+  force.on('tick', function() {
+    node.attr('transform', function(d) { return 'translate('+d.x+','+d.y+')'; })
+        .attr('clip-path', function(d) { return 'url(#clip-'+d.index+')'; });
 
-		force.on('end', function() {
-			node.attr('r', 5)
-				.attr('cx', function(d) { return d.x; })
-				.attr('cy', function(d) { return d.y; });
+    link.attr('x1', function(d) { return d.source.x; })
+        .attr('y1', function(d) { return d.source.y; })
+        .attr('x2', function(d) { return d.target.x; })
+        .attr('y2', function(d) { return d.target.y; });
 
-			link.attr('x1', function(d) { return d.source.x; })
-				.attr('y1', function(d) { return d.source.y; })
-				.attr('x2', function(d) { return d.target.x; })
-				.attr('y2', function(d) { return d.target.y; });
-		});
-		force.start();
+    var clip = svg.selectAll('.clip')
+        .data( recenterVoronoi(node.data()), function(d) { return d.point.index; } );
 
-		var link = vis.selectAll("line.link")
-				.data(json.links)
-			.enter().append("svg:line")
-				.attr("class", "link")
-				.style("stroke-width", function(d) { return Math.sqrt(d.value); })
-				.attr("x1", function(d) { return d.source.x; })
-				.attr("y1", function(d) { return d.source.y; })
-				.attr("x2", function(d) { return d.target.x; })
-				.attr("y2", function(d) { return d.target.y; });
+    clip.enter().append('clipPath')
+        .attr('id', function(d) { return 'clip-'+d.point.index; })
+        .attr('class', 'clip');
+    clip.exit().remove();
 
-		var node = vis.selectAll("circle.node")
-				.data(json.nodes)
-			.enter().append("svg:circle")
-				.attr("class", "node")
-				.attr("cx", function(d) { return d.x; })
-				.attr("cy", function(d) { return d.y; })
-				.attr("r", 5)
-				.style("fill", function(d) { return fill(d.group); })
-				.call(force.drag);
+    clip.selectAll('path').remove();
+    clip.append('path')
+        .attr('d', function(d) { return 'M'+d.join(',')+'Z'; });
+  });
 
-		node.append("svg:title")
-				.text(function(d) { return d.name; });
+  d3.json('atlas.json', function(err, data) {
+    if (data) {
+      data.nodes.forEach(function(d, i) {
+        d.id = i;
+      });
 
-		vis.style("opacity", 1e-6)
-			.transition()
-				.duration(1000)
-				.style("opacity", 1);
+      link = svg.selectAll('.link')
+          .data( data.links )
+        	.enter().append('line')
+          .attr('class', 'link')
+          .style("stroke-width", function(d) { return Math.sqrt(d.value); });
 
-		force.on("tick", function() {
-			link.attr("x1", function(d) { return d.source.x; })
-					.attr("y1", function(d) { return d.source.y; })
-					.attr("x2", function(d) { return d.target.x; })
-					.attr("y2", function(d) { return d.target.y; });
+      node = svg.selectAll('.node')
+          .data( data.nodes )
+        	.enter().append('g')
+          .attr('title', name)
+          .attr('class', 'node')
+          .call( force.drag );
 
-			node.attr("cx", function(d) { return d.x; })
-					.attr("cy", function(d) { return d.y; });
-		});
-	};
+      node.append('circle')
+          .attr('r', 30)
+          .attr('fill', colorByGroup)
+          .attr('fill-opacity', 0.5);
 
+      node.append('circle')
+          .attr('r', 4)
+          .attr('stroke', 'black');
 
-
-
-	$.getJSON("atlas.json", function(json) {
-		var data = json;
-		console.log(data);
-		draw(data);
-	});
+      force
+          .nodes( data.nodes )
+          .links( data.links )
+          .start();
+					//for (var i = 10000; i > 0; --i) force.tick();
+  				//force.stop();
+    }
+  });
 
 })();

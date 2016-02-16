@@ -1,6 +1,6 @@
-<?php include('atlas/wp-load.php'); 
+<?php include('../atlas/wp-load.php'); 
 
-//header('Content-type: application/json');
+header('Content-type: application/json');
 
 /*
 Homemade Ajax API
