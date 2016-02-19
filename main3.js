@@ -24,7 +24,13 @@ var svg = d3.select("#viz").append("svg")
 
 var vis = svg.append('g');
 
+
+// Use it!
+var circles = $('#viz circle');
+
 function redraw() {
+	var stroke = .2/d3.event.scale;
+	$('#viz circle').css('stroke-width', stroke);
 	vis.attr("transform",
 		"translate(" + d3.event.translate + ")"
 		+ " scale(" + d3.event.scale + ")");
@@ -61,7 +67,10 @@ d3.json("atlas-total.json", function(error, graph) {
 		.enter().append("circle")
 		.attr("class", "node")
 		.attr("r", 5)
-		.style("fill", function(d) { return color(d.type); })
+		.style("fill", function(d) { 
+			console.log(d.type);
+			return color(d.type); 
+		})
 		.call(force.drag);
 
 	node.append("title")
